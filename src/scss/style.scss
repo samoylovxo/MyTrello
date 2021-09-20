@@ -1,0 +1,229 @@
+@import './styleHelpers.scss';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+
+body {
+  color: $MainColor;
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.trello {
+  background-color: $Color3;
+  min-height: 100vh;
+
+  &__content {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 10px;
+    padding: 10px;
+  }
+
+  &__todo,
+  &__in-progress,
+  &__done {
+    background-color: $Color4;
+    padding: 10px;
+    border-radius: 5px;
+    @extend %shadowBlock;
+    animation: bounce 1s;
+  }
+
+  &__title {
+    text-transform: uppercase;
+    font-size: 14px;
+    margin: 0;
+    padding: 5px 10px;
+    border-bottom: 1px solid $Color3;
+  }
+
+  &__card-row {
+    padding-top: 10px;
+    min-height: 100px;
+    height: calc(100% - 37px);
+    transition: margin-bottom 0.3s;
+
+    > :nth-child(n + 2) {
+      margin-top: 10px;
+    }
+  }
+
+  &__card-item {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-wrap: break-word;
+    position: relative;
+    @extend %shadowContent;
+    cursor: grabbing;
+    transition: margin-bottom 0.3s;
+
+    &:hover .trello__item-remove {
+      opacity: 1;
+    }
+
+    &.dragged {
+      border-radius: 10px;
+      position: absolute;
+      z-index: 999;
+      pointer-events: none;
+      background: #fff;
+      cursor: grabbing;
+      transform: rotate(10deg);
+      max-width: 300px;
+    }
+
+    &:hover.dragged .trello__card-row {
+      padding-bottom: 50px;
+    }
+  }
+
+  &__item-remove {
+    position: absolute;
+    display: block;
+    top: -8px;
+    right: -5px;
+    width: 25px;
+    height: 25px;
+    background-image: url(../images/remove.svg);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-color: $Color2;
+    background-size: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+    opacity: 0;
+  }
+
+  &__card-img {
+    max-height: 150px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    border-radius: 5px;
+
+    img {
+      width: 100%;
+    }
+  }
+
+  &__card-text {
+    margin: 0;
+    line-height: 25px;
+  }
+
+  &__create-card {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+  }
+
+  &__form {
+    display: none;
+    margin-top: 20px;
+
+    > :nth-child(n + 2) {
+      margin-top: 10px;
+    }
+  }
+
+  &__form-desc {
+    font-family: inherit;
+    display: block;
+    border-radius: 5px;
+    outline: none;
+    border: none;
+    border-bottom: 1px solid #eee9;
+    padding: 15px;
+    width: 100%;
+    resize: none;
+    @extend %shadowContent;
+
+    &.invalid {
+      border: 1px solid $Color2;
+    }
+  }
+
+  &__form-input-img {
+    position: absolute;
+    top: -9999px;
+  }
+
+  &__form-input-overlay {
+    display: block;
+    background: $Color4;
+    border-radius: 5px;
+    padding: 12px 20px;
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      bottom: 4px;
+      right: 4px;
+      border: 1px dashed $Color3;
+
+      border-radius: 2px;
+    }
+
+    &:active::before {
+      border-color: $Color2;
+    }
+  }
+
+  &__from-btns {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.btn {
+  padding: 8px 20px;
+  background: #fff;
+  border: 1px solid $Color3;
+  text-align: center;
+  outline: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.3s;
+
+  &:hover {
+    color: #fff;
+    background: $Color3;
+  }
+}
+
+.btn-close-form {
+  border: none;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+.show {
+  display: block;
+}
