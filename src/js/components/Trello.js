@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-return-assign */
 /* eslint-disable class-methods-use-this */
 /* eslint-disable import/prefer-default-export */
 
@@ -8,6 +10,9 @@ export class Trello {
     }
     this.contentType = contentType;
     this.activeDragCard = undefined;
+    this.todoCards = [];
+    this.progressCards = [];
+    this.doneCards = [];
 
     this.form = this.element.querySelector('.trello__form');
     this.btnAddCard = this.element.querySelector('.btn-add-card');
@@ -16,11 +21,14 @@ export class Trello {
     this.formInput = this.element.querySelector('.trello__form-input-img');
     this.formDesc = this.element.querySelector('.trello__form-desc');
     this.todoRow = this.element.querySelector('.todo-row');
+    this.progressRow = this.element.querySelector('.progress-row');
+    this.doneRow = this.element.querySelector('.done-row');
     this.rows = this.element.querySelectorAll('.trello__card-row');
     this.inputOverlay = this.element.querySelector(
       '.trello__form-input-overlay'
     );
 
+    this.init = this.init.bind(this);
     this.createCard = this.createCard.bind(this);
     this.stopSendForm = this.stopSendForm.bind(this);
     this.openFormForAddCard = this.openFormForAddCard.bind(this);
@@ -34,6 +42,7 @@ export class Trello {
     this.onStartDrag = this.onStartDrag.bind(this);
     this.onEndDrag = this.onEndDrag.bind(this);
     this.onDrag = this.onDrag.bind(this);
+    this.saveLocalStorage = this.saveLocalStorage.bind(this);
 
     this.form.addEventListener('submit', this.stopSendForm);
     this.btnAddCard.addEventListener('click', this.createCard);
@@ -46,6 +55,29 @@ export class Trello {
     this.rows.forEach((row) =>
       row.addEventListener('mousedown', this.onStartDrag)
     );
+
+    this.init();
+  }
+
+  init() {
+    const localData = JSON.parse(localStorage.getItem('rows'));
+
+    if (localData) {
+      const { todoCards, progressCards, doneCards } = localData;
+
+      this.todoRow.insertAdjacentHTML('beforeend', todoCards);
+
+      this.progressRow.insertAdjacentHTML('beforeend', progressCards);
+
+      this.doneRow.insertAdjacentHTML('beforeend', doneCards);
+
+      this.btnRemoveItem = this.element.querySelectorAll(
+        '.trello__item-remove'
+      );
+      this.btnRemoveItem.forEach((el) =>
+        el.addEventListener('click', this.removeCardItem)
+      );
+    }
   }
 
   removeInvalid() {
@@ -104,6 +136,12 @@ export class Trello {
 
     this.todoRow.insertAdjacentHTML('beforeend', card);
 
+    const cardElem = this.todoRow.children[this.todoRow.children.length - 1];
+
+    this.todoCards.push(cardElem.outerHTML);
+
+    this.saveLocalStorage();
+
     this.btnRemoveItem = this.element.querySelectorAll('.trello__item-remove');
     this.btnRemoveItem.forEach((el) =>
       el.addEventListener('click', this.removeCardItem)
@@ -155,6 +193,8 @@ export class Trello {
     removingCard
       .querySelector('.trello__item-remove')
       .removeEventListener('click', this.removeCardItem);
+
+    this.saveLocalStorage();
   }
 
   onStartDrag(e) {
@@ -163,6 +203,27 @@ export class Trello {
     if (target.classList.contains('trello__item-remove')) return;
 
     this.activeDragElement = target.closest('.trello__card-item');
+
+    const parentRowActiveElem =
+      this.activeDragElement &&
+      this.activeDragElement.closest('.trello__card-row');
+
+    let indexActiveElem;
+
+    if (parentRowActiveElem.classList.contains('todo-row')) {
+      indexActiveElem = this.todoCards.indexOf(this.activeDragElement);
+      this.todoCards.splice(indexActiveElem, 1);
+    }
+
+    if (parentRowActiveElem.classList.contains('progress-row')) {
+      indexActiveElem = this.progressCards.indexOf(this.activeDragElement);
+      this.progressCards.splice(indexActiveElem, 1);
+    }
+
+    if (parentRowActiveElem.classList.contains('done-row')) {
+      indexActiveElem = this.doneCards.indexOf(this.activeDragElement);
+      this.doneCards.splice(indexActiveElem, 1);
+    }
 
     if (this.activeDragElement) this.activeDragElement.classList.add('dragged');
 
@@ -187,6 +248,20 @@ export class Trello {
       if (closestItem) {
         closestItem.insertAdjacentElement('afterend', this.activeDragElement);
       }
+
+      if (closestRow.classList.contains('todo-row')) {
+        this.todoCards.push(this.activeDragElement.outerHTML);
+      }
+
+      if (closestRow.classList.contains('progress-row')) {
+        this.progressCards.push(this.activeDragElement.outerHTML);
+      }
+
+      if (closestRow.classList.contains('done-row')) {
+        this.doneCards.push(this.activeDragElement.outerHTML);
+      }
+
+      this.saveLocalStorage();
 
       this.activeDragElement.style = '';
       this.activeDragElement = undefined;
@@ -222,12 +297,22 @@ export class Trello {
       });
     }
 
-    // const shiftX =
-    //   e.clientX - this.activeDragElement.getBoundingClientRect().left;
-    // const shiftY =
-    //   e.clientY - this.activeDragElement.getBoundingClientRect().top;
-
     this.activeDragElement.style.left = `${e.clientX + window.scrollX}px`;
     this.activeDragElement.style.top = `${e.clientY + window.scrollY}px`;
+  }
+
+  async saveLocalStorage() {
+    const items = document.querySelectorAll('.trello__card-item');
+
+    items.forEach((item) => (item.style = ''));
+
+    localStorage.setItem(
+      'rows',
+      JSON.stringify({
+        todoCards: this.todoRow.innerHTML,
+        progressCards: this.progressRow.innerHTML,
+        doneCards: this.doneRow.innerHTML,
+      })
+    );
   }
 }
